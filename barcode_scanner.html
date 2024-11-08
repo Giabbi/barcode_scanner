@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Barcode Scanner</title>
+  <script src="https://unpkg.com/@ericblade/quagga2@0.0.9/dist/quagga.min.js"></script>
+  <style>
+    #scanner-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="scanner-container">
+    <video id="preview"></video>
+  </div>
+  <script>
+    Quagga.init({
+      inputStream: {
+        type: "LiveStream",
+        constraints: {
+          width: 640,
+          height: 480,
+          facingMode: "environment" // Use the back camera
+        },
+        area: {
+          top: "25%",
+          right: "10%",
+          left: "10%",
+          bottom: "25%"
+        },
+        target: document.querySelector('#preview')
+      },
+      decoder: {
+        readers: ["code_128_reader", "ean_reader", "ean_8_reader"]
+      }
+    }, function(err) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      Quagga.start();
+    });
+
+    // Capture barcode data when detected
+    Quagga.onDetected(function(data) {
+      const scannedCode = data.codeResult.code;
+      // Send the scanned code to Wix using postMessage
+      window.parent.postMessage({ barcode: scannedCode }, "*");
+      Quagga.stop(); // Stop after one scan
+    });
+  </script>
+</body>
+</html>
