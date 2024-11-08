@@ -11,27 +11,30 @@
       align-items: center;
       height: 100vh;
     }
+    #preview {
+      width: 100%;
+      height: 100%;
+    }
   </style>
 </head>
 <body>
   <div id="scanner-container">
-    <video id="preview"></video>
+    <video id="preview" autoplay playsinline></video>
   </div>
   <script>
+    // Explicitly start video stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        document.querySelector('#preview').srcObject = stream;
+      })
+      .catch((err) => {
+        console.error("Error accessing camera:", err);
+      });
+
+    // Initialize QuaggaJS for barcode scanning
     Quagga.init({
       inputStream: {
         type: "LiveStream",
-        constraints: {
-          width: 640,
-          height: 480,
-          facingMode: "environment" // Use the back camera
-        },
-        area: {
-          top: "25%",
-          right: "10%",
-          left: "10%",
-          bottom: "25%"
-        },
         target: document.querySelector('#preview')
       },
       decoder: {
@@ -48,9 +51,8 @@
     // Capture barcode data when detected
     Quagga.onDetected(function(data) {
       const scannedCode = data.codeResult.code;
-      // Send the scanned code to Wix using postMessage
       window.parent.postMessage({ barcode: scannedCode }, "*");
-      Quagga.stop(); // Stop after one scan
+      Quagga.stop();
     });
   </script>
 </body>
